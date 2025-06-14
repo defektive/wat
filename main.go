@@ -25,12 +25,7 @@ import (
 	"github.com/defektive/wat/pkg/cmd"
 )
 
-var PrivateKeyB64 = ""
-var ServerPublicKeyB64 = ""
-var ServerAddress = ""
-var TunnelLocalAddress = ""
-var TunnelDNSServer = ""
-
 func main() {
-	cmd.Execute(PrivateKeyB64, ServerPublicKeyB64, ServerAddress, TunnelLocalAddress, TunnelDNSServer)
+
+	cmd.Execute()
 }

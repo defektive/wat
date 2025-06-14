@@ -12,8 +12,19 @@ ServerAddress=""
 TunnelLocalAddress=""
 TunnelDNSServer=""
 
-CGO_ENABLED=0; go build -ldflags "-X main.PrivateKeyB64=$PrivateKeyB64 -X main.ServerPublicKeyB64=$ServerPublicKeyB64 -X main.ServerAddress=$ServerAddress -X main.TunnelLocalAddress=$TunnelLocalAddress -X main.TunnelDNSServer=$TunnelDNSServer"
+LocalTunnels="8080:10.4.0.1:8888,2222:10.4.0.1:22"
+RemoteTunnels="443:google.com:443"
+
+pkg="github.com/defektive/wat/pkg/cmd"
+
 ```
+
+Build
+
+```bash
+CGO_ENABLED=0; go build -ldflags "-X $pkg.defaultLocalTunnels=$LocalTunnels -X $pkg.defaultRemoteTunnels=$RemoteTunnels -X $pkg.defaultPrivateKeyB64=$PrivateKeyB64 -X $pkg.defaultServerPublicKeyB64=$ServerPublicKeyB64 -X $pkg.defaultServerAddress=$ServerAddress -X $pkg.defaultTunnelLocalAddress=$TunnelLocalAddress -X $pkg.defaultTunnelDNSServer=$TunnelDNSServer"
+```
+
 
 
 ## Usage

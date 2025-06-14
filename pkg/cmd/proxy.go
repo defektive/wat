@@ -3,18 +3,28 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"log"
+	"strings"
+	"sync"
 )
-
-var ProxyListener = ":8080"
 
 var LocalTunnels = []string{}
 var RemoteTunnels = []string{}
 
+func init() {
+	if defaultLocalTunnels != "" {
+		LocalTunnels = strings.Split(defaultLocalTunnels, ",")
+	}
+	if defaultRemoteTunnels != "" {
+		RemoteTunnels = strings.Split(defaultRemoteTunnels, ",")
+	}
+}
+
 // proxyCmd represents the base command when called without any subcommands
 var proxyCmd = &cobra.Command{
-	Use:   "proxy",
-	Short: "proxy",
-	Long:  `Start the proxy server`,
+	Use:     "proxy",
+	Aliases: []string{"p", "run", "tunnel"},
+	Short:   "proxy",
+	Long:    `Start the proxy server`,
 	Example: `
 Expose port 3306 on localhost and tunnel all traffic to port 3306 on a host on the wireguard network.
 
@@ -29,17 +39,30 @@ Accept traffic from wireguard network on port 443, forward it to port 443 on the
 	./wat proxy -L 443:intranet.example.com:443
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("proxy called", ProxyListener)
+		var localRemote sync.WaitGroup
 
+		localRemote.Add(1)
 		go func() {
 			if err := wireGuardPeer.LocalTunnels(LocalTunnels...); err != nil {
-				log.Println("[p] failed to setup local tunnels", err)
+				log.Println("failed to setup local tunnels", err)
 			}
+			localRemote.Done()
+
 		}()
 
-		if err := wireGuardPeer.RemoteTunnels(RemoteTunnels...); err != nil {
-			log.Println("[p] failed to setup remote tunnels", err)
-		}
+		localRemote.Add(1)
+		go func() {
+			if err := wireGuardPeer.RemoteTunnels(RemoteTunnels...); err != nil {
+				localRemote.Add(1)
+				log.Println("failed to setup remote tunnels", err)
+			}
+			localRemote.Done()
+		}()
+
+		// maybe repl...
+
+		localRemote.Wait()
+
 	},
 }
 
