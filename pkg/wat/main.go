@@ -128,10 +128,10 @@ func (p *Peer) RemoteTunnels(tunnels ...string) error {
 		waitGroup.Add(1)
 		go func() {
 			err := p.RemoteProxy(protocol, localAddr, remoteAddr)
-			waitGroup.Done()
 			if err != nil {
 				log.Printf("remote proxy failed: %s - %v", tunnel, err)
 			}
+			waitGroup.Done()
 		}()
 	}
 
@@ -172,10 +172,10 @@ func (p *Peer) LocalTunnels(tunnels ...string) error {
 		waitGroup.Add(1)
 		go func() {
 			err := p.LocalProxy(protocol, localAddr, remoteAddr)
-			waitGroup.Done()
 			if err != nil {
 				log.Printf("local proxy failed: %s - %v", tunnel, err)
 			}
+			waitGroup.Done()
 		}()
 	}
 
@@ -253,7 +253,7 @@ func (p *Peer) RemoteProxy(proto, localAddress, remoteAddress string) error {
 
 func (p *Peer) LocalProxy(proto, localAddress, remoteAddress string) error {
 
-	listener, err := net.Listen("tcp", localAddress)
+	listener, err := net.Listen(proto, localAddress)
 
 	if err != nil {
 		return err
