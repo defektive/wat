@@ -52,10 +52,11 @@ Chain multiple tunnels
 
 ## To Do Items
 
-- [ ] Allow specifying keys and endpoint from the CLI
+- [x] Allow specifying keys and endpoint from the CLI
+- [x] Allow specifying default tunnels at build time
 - [ ] github releases
 - [ ] Accept tunnels from STDIN
-- [ ] Add command aliases  `tunnel`, `p`, `run`
+- [x] Add command aliases  `tunnel`, `p`, `run`
 - [ ] tests
 - [ ] improved logging (slog)
 - [ ] Allow changing tunnels while running
