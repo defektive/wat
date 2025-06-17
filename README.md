@@ -152,10 +152,8 @@ Endpoint = $(curl -s ipcurl.net):$(sudo cat /etc/wireguard/wg0.conf | grep Liste
 EOFC
 
 
-echo "no you can add the peer to the server"
+echo "now you can add the peer to the server"
 echo "sudo wg set wg0 peer \$(sudo cat /etc/wireguard/public.key)  allowed-ips $NEXT_IP"
-echo or
-echo "ssh -o StrictHostKeyChecking=no $(echo $SERVER_PRIVATE_IP | cut -d/ -f1) \"sudo wg set wg0 peer \$(sudo cat /etc/wireguard/public.key)  allowed-ips $NEXT_IP\""
 
 
 sudo systemctl enable wg-quick@wg0
