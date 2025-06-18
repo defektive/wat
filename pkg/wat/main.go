@@ -14,6 +14,7 @@ import (
 	"net/netip"
 	"strings"
 	"sync"
+	"time"
 )
 
 const DefaultPort = 51820
@@ -79,11 +80,22 @@ func (p *Peer) getDevice() (*device.Device, error) {
 			return nil, err
 		}
 
-		dev.SendKeepalivesToPeersWithCurrentKeypair()
 		p.wgDevice = dev
+		go p.KeepAlive()
 	}
 
 	return p.wgDevice, nil
+}
+
+func (p *Peer) KeepAlive() {
+	for {
+		//p.wgDevice.SendKeepalivesToPeersWithCurrentKeypair()
+
+		// ghetto hack to force connection so we can listen on it
+		// todo: learn how to do this without ghetto hack
+		p.tunnelNet.LookupHost("test.local")
+		time.Sleep(60 * time.Second)
+	}
 }
 
 func (p *Peer) Dial(proto, address string) (net.Conn, error) {
@@ -195,20 +207,12 @@ func (p *Peer) RemoteProxy(proto, localAddress, remoteAddress string) error {
 	}
 
 	log.Println("[p] listening on wireguard to ", addrPort)
-	log.Println("[p] forwarding to  ", remoteAddress)
+	log.Println("[p] forwarding to ", remoteAddress)
 
 	_, err = p.getDevice()
 	if err != nil {
 		return err
 	}
-
-	// ghetto hack to force connection so we can listen on it
-	// todo: learn how to do this without ghetto hack
-	res, err := p.tunnelNet.LookupHost("test.local")
-	if err != nil {
-		log.Println("[p] failed to lookup host", err)
-	}
-	log.Println("[p] remote address:", res)
 
 	tcpAddr := net.TCPAddrFromAddrPort(addrPort)
 	listener, err := p.tunnelNet.ListenTCP(tcpAddr)
