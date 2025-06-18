@@ -93,7 +93,8 @@ func (p *Peer) KeepAlive() {
 
 		// ghetto hack to force connection so we can listen on it
 		// todo: learn how to do this without ghetto hack
-		p.tunnelNet.LookupHost("test.local")
+		res, err := p.tunnelNet.LookupHost("test.local")
+		log.Println("fake keep alive ", res, err)
 		time.Sleep(60 * time.Second)
 	}
 }
