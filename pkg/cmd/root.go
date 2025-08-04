@@ -16,6 +16,7 @@ var defaultServerPublicKeyB64 = ""
 var defaultServerAddress = ""
 var defaultTunnelLocalAddress = ""
 var defaultTunnelDNSServer = ""
+var defaultDynamicTunnels = ""
 var defaultLocalTunnels = ""
 var defaultRemoteTunnels = ""
 
@@ -97,7 +98,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&defaultTunnelLocalAddress, "tunnel-ip", "I", defaultTunnelLocalAddress, "IP address for wireguard interface")
 	rootCmd.PersistentFlags().StringVarP(&defaultServerAddress, "server", "S", defaultServerAddress, "Server to connect to")
 	rootCmd.PersistentFlags().StringVarP(&defaultServerPublicKeyB64, "server-key", "P", defaultServerPublicKeyB64, "Base64 public key for server")
-	rootCmd.PersistentFlags().StringVarP(&defaultTunnelDNSServer, "tunnel-dns-server", "D", defaultTunnelDNSServer, "DNS server to use for wireguard interface")
+	rootCmd.PersistentFlags().StringVarP(&defaultTunnelDNSServer, "tunnel-dns-server", "d", defaultTunnelDNSServer, "DNS server to use for wireguard interface")
 	rootCmd.PersistentFlags().IntVar(&logLevel, "log-level", 0, "Log Level")
 
 	// required flags dont work with default values...

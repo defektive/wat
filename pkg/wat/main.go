@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/armon/go-socks5"
 	"golang.zx2c4.com/wireguard/conn"
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/tun"
@@ -196,6 +197,33 @@ func (p *Peer) LocalTunnels(tunnels ...string) error {
 	return nil
 }
 
+func (p *Peer) DynamicTunnels(tunnels ...string) error {
+
+	var waitGroup sync.WaitGroup
+
+	for _, tunnel := range tunnels {
+		protocol := "tcp"
+		tunnelDef := tunnel
+		protoSlice := strings.Split(tunnel, "/")
+		if len(protoSlice) == 2 {
+			protocol = protoSlice[0]
+			tunnelDef = protoSlice[1]
+		}
+
+		waitGroup.Add(1)
+		go func() {
+			err := p.DynamicProxy(protocol, tunnelDef)
+			if err != nil {
+				log.Printf("dynamic proxy failed: %s - %v", tunnel, err)
+			}
+			waitGroup.Done()
+		}()
+	}
+
+	waitGroup.Wait()
+	return nil
+}
+
 func (p *Peer) RemoteProxy(proto, localAddress, remoteAddress string) error {
 	if strings.HasPrefix(localAddress, ":") {
 		ipSlice := strings.Split(p.LocalAddresses[0].String(), "/")
@@ -207,8 +235,8 @@ func (p *Peer) RemoteProxy(proto, localAddress, remoteAddress string) error {
 		return err
 	}
 
-	log.Println("[p] listening on wireguard to ", addrPort)
-	log.Println("[p] forwarding to ", remoteAddress)
+	log.Println("[p] listening on wireguard to", addrPort)
+	log.Println("[p] forwarding to", remoteAddress)
 
 	_, err = p.getDevice()
 	if err != nil {
@@ -300,6 +328,48 @@ func (p *Peer) LocalProxy(proto, localAddress, remoteAddress string) error {
 
 		})()
 	}
+}
+
+func (p *Peer) DynamicProxy(proto, listenAddr string) error {
+
+	conf := &socks5.Config{}
+	server, err := socks5.New(conf)
+	if err != nil {
+		panic(err)
+	}
+
+	if strings.HasPrefix(listenAddr, "wg:") {
+		// we have a dynamic proxy exposed on wireguard
+		ipSlice := strings.Split(p.LocalAddresses[0].String(), "/")
+
+		listenAddr = strings.ReplaceAll(listenAddr, "wg", ipSlice[0])
+		log.Println("[p] listening on ", listenAddr, ipSlice[0])
+
+		addrPort, err := netip.ParseAddrPort(listenAddr)
+		if err != nil {
+			return err
+		}
+
+		log.Println("[p] Socks on wireguard  port", addrPort)
+
+		_, err = p.getDevice()
+		if err != nil {
+			return err
+		}
+
+		tcpAddr := net.TCPAddrFromAddrPort(addrPort)
+		listener, err := p.tunnelNet.ListenTCP(tcpAddr)
+		if err != nil {
+			return err
+		}
+		return server.Serve(listener)
+	} else {
+		log.Println("[p] Socks on Local interface  port", listenAddr)
+		return server.ListenAndServe(proto, listenAddr)
+	}
+
+	return nil
+
 }
 
 func NewPeer(privateKey, serverPublicKey []byte, serverAddress string, localAddresses, dnsServers []netip.Addr, logLevel int) *Peer {
